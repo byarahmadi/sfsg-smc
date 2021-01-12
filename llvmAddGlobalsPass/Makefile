@@ -1,0 +1,23 @@
+LLVM_CONFIG?=llvm-config
+CXX=clang
+
+SRC_DIR?=$(PWD)
+LDFLAGS+=$(shell $(LLVM_CONFIG) --ldflags)
+COMMON_FLAGS=-Wall -Wextra
+CXXFLAGS+=$(COMMON_FLAGS) $(shell $(LLVM_CONFIG) --cxxflags)
+CPPFLAGS+=$(shell $(LLVM_CONFIG) --cppflags) -I$(SRC_DIR)
+
+LOADABLE_MODULE_OPTIONS=-shared -W1 -O1
+
+LLVM_ADD_GLOBALS_PASS=addglobals.so
+LLVM_ADD_GLOBALS_PASS_OBJECTS=llvmAddGlobalsPass.o
+
+default:$(LLVM_ADD_GLOBALS_PASS)
+
+%o:$(SRC_DIR)/%.cpp
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $<
+$(LLVM_ADD_GLOBALS_PASS):$(LLVM_ADD_GLOBALS_PASS_OBJECTS)
+	$(CXX) -o $@ $(LOADABLE_MODULE_OPTIONS) $(CXXFLAGS) $(LDFLAGS) $^
+clean:
+	rm -f $(LLVM_ADD_GLOBALS_PASS) $(LLVM_ADD_GLOBALS_PASS_OBJECTS)
+
